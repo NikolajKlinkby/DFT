@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.23)
 project(example LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 17)
 
 #-------------------------------------------------------------------------------
 # Enforce out-of-source build
@@ -12,12 +13,16 @@ if ("${source_dir}" STREQUAL "${binary_dir}")
     mkdir build
     cd build
     cmake ..
-    make" )
+    cmake --build .
+    cmake --install . --prefix ../../DFT-install" )
 endif()
 #-------------------------------------------------------------------------------
 
 set(DFT_DIR "../DFT-install/lib/cmake/DFT")
 find_package(DFT)
+
+set( MPI_DETERMINE_LIBRARY_VERSION true )
+find_package( MPI COMPONENTS CXX )
 
 add_executable(example)
 
@@ -26,5 +31,5 @@ target_link_libraries(example PRIVATE DFT::DFT)
 
 get_target_property(DFT_dll DFT::DFT IMPORTED_LOCATION_RELEASE)
 
-add_custom_target(mpi_example COMMAND mpirun -np 4 ./example)
-
+# Run the executable
+add_custom_target(mpi_example ALL COMMAND mpirun -np 4 ./example )
