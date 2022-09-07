@@ -1,2 +1,7 @@
 include(CMakeFindDependencyMacro)
+set( MPI_DETERMINE_LIBRARY_VERSION true )
+find_dependency( MPI COMPONENTS CXX )
+find_dependency(blaspp)
+find_dependency(lapackpp)
+find_dependency(slate)
 include(${CMAKE_CURRENT_LIST_DIR}/DFTTargets.cmake)

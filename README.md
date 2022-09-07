@@ -6,6 +6,13 @@ Description
 
 Dowload stuff
 
+```bash
+cd source && mkdir build && cd build
+cmake ..
+cmake --build .
+cmake --install . --prefix ../../DFT-install
+```
+
 ## Usage
 
-Do stuff
+Make C++ file and CMakeList as in example
