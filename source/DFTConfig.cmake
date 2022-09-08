@@ -1,4 +1,7 @@
 include(CMakeFindDependencyMacro)
+set(slate_DIR /opt/slate)
+set(blaspp_DIR ${slate_DIR}/lib/blaspp)
+set(lapackpp_DIR ${slate_DIR}/lib/lapackpp)
 set( MPI_DETERMINE_LIBRARY_VERSION true )
 find_dependency( MPI COMPONENTS CXX )
 find_dependency(blaspp)
