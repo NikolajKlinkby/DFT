@@ -1,4 +1,3 @@
-#include "DFT"
 #include "Space1D/Space1D.h"
 #include "utils/utils.h"
 #include "slate/slate.hh"
