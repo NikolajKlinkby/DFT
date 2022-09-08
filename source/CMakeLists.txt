@@ -22,7 +22,9 @@ if (MSVC)
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 endif()
 
-set(CMAKE_PREFIX_PATH /opt/slate)
+set(slate_DIR /opt/slate)
+set(blaspp_DIR /opt/slate)
+set(lapackpp_DIR /opt/slate)
 
 set( MPI_DETERMINE_LIBRARY_VERSION true )
 find_package( MPI COMPONENTS CXX )

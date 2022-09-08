@@ -4,7 +4,7 @@ Description
 
 ## Intallation
 
-Dowload stuff
+Download stuff
 
 ```bash
 cd source && mkdir build && cd build
@@ -15,4 +15,9 @@ cmake --install . --prefix ../../DFT-install
 
 ## Usage
 
-Make C++ file and CMakeList as in example
+Make C++ file and CMakeList as in example and run
+```bash
+mkdir build && cd build
+cmake ..
+cmake --build .
+```
