@@ -36,6 +36,8 @@ add_library(DFT SHARED)
 target_link_libraries(DFT slate)
 target_include_directories(DFT PRIVATE "${PROJECT_SOURCE_DIR}")
 add_subdirectory("utils")
+add_subdirectory("Space1D")
+
 
 # Setting structure
 install(TARGETS DFT
