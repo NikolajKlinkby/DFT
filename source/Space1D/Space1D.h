@@ -5,7 +5,7 @@
 class Space1D {
     //TODO build settings structure
 
-        //TODO - include: #Lattice points, Spacing, #Particles, Threshold convergence for SCF, Maximum number of iterations
+        //TODO - include: #Lattice points, Spacing, #Particles, Threshold convergence for SCF, Maximum number of iterations for SCF
 
     //TODO create lattice and density space
 
