@@ -1,5 +1,5 @@
-#include "Space1D/Space1D.h"
-#include "utils/utils.h"
+#include "Space1D.h"
+#include "utils.h"
 #include "slate/slate.hh"
 #include <blas.hh>
 #include <mpi.h>

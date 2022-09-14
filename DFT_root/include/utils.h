@@ -1,13 +1,18 @@
 #include "slate/slate.hh"
-#ifndef DFT_UTILS_H
-#define DFT_UTILS_H
+#include <blas.hh>
+#include <mpi.h>
+
+#ifdef USE_EXPORT_KEYWORD
+export
+#endif
 
 #ifndef Vector_H
 #define Vector_H
-template <class scalar_t>
-class Vector {
+template <typename scalar_t>
+class Vector{
 public:
-    Vector(int m,int nb,int p, slate::Target target = slate::Target::HostTask);
+    Vector(int m,int nb, int p);
+    Vector(int m,int nb, int p, slate::Target target);
 
     void Set(int index, scalar_t value);
 
@@ -22,4 +27,7 @@ private:
 };
 #endif // Vector_H
 
-#endif //DFT_UTILS_H
+#ifndef USE_EXPORT_KEYWORD
+#include "utils/utils.cpp"
+#endif
+

@@ -18,18 +18,16 @@ if ("${source_dir}" STREQUAL "${binary_dir}")
 endif()
 #-------------------------------------------------------------------------------
 
-set(DFT_DIR "../DFT-install/lib/cmake/DFT")
+set(DFT_DIR "../DFT-install/lib/DFT")
 find_package(DFT)
 
 set( MPI_DETERMINE_LIBRARY_VERSION true )
-find_package( MPI COMPONENTS CXX )
+find_package( MPI COMPONENTS CXX QUIET)
 
 add_executable(example)
 
-target_sources(example PRIVATE "example.cpp")
-target_link_libraries(example PRIVATE DFT::DFT)
-
-get_target_property(DFT_dll DFT::DFT IMPORTED_LOCATION_RELEASE)
+target_sources(example PRIVATE example.cpp)
+target_link_libraries(example PUBLIC DFT)
 
 # Run the executable
 add_custom_target(mpi_example ALL COMMAND mpirun -np 4 ./example )
