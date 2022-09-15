@@ -7,10 +7,10 @@ Description
 Download stuff
 
 ```bash
-cd source && mkdir build && cd build
-cmake ..
+cd src && mkdir build && cd build
+cmake .. -DCMAKE_INSTALL_PREFIX=../../DFT-install
 cmake --build .
-cmake --install . --prefix ../../DFT-install
+cmake --install .
 ```
 
 ## Usage
