@@ -2,12 +2,7 @@
 #include <blas.hh>
 #include <mpi.h>
 
-#ifdef USE_EXPORT_KEYWORD
-export
-#endif
-
-#ifndef Vector_H
-#define Vector_H
+#pragma once
 template <typename scalar_t>
 class Vector{
 public:
@@ -25,9 +20,6 @@ public:
 private:
     slate::Matrix<scalar_t> vector_ptr;
 };
-#endif // Vector_H
 
-#ifndef USE_EXPORT_KEYWORD
-#include "utils/utils.cpp"
-#endif
+#include "utils.ipp"
 

@@ -1,1 +1,1 @@
-#include "Space1D/Potentials.h"
+#include "Space1D/Potentials.hpp"

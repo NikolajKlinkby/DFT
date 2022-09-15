@@ -117,7 +117,7 @@ install(
         # / copies contents, not directory itself
         DIRECTORY "${PROJECT_SOURCE_DIR}/include/"
         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
-        FILES_MATCHING REGEX "\\.(h|hh)$"
+        FILES_MATCHING REGEX "\\.(hpp|ipp)$"
 )
 
 # Install <package>Targets.cmake

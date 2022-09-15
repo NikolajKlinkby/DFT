@@ -1,1 +1,1 @@
-#include "Space1D/SCF.h"
+#include "Space1D/SCF.hpp"
