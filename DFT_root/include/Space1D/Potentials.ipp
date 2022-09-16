@@ -4,6 +4,7 @@
 #include <blas.hh>
 #include <mpi.h>
 #include <map>
+#include <math.h>
 
 /* -------- Potential funciton --------*/
 template <typename scalar_t>
@@ -75,8 +76,9 @@ DualVector<scalar_t> HartreePot(const DualVector<scalar_t> & density){
     return hartree;
 }
 
+/* ---- Local Spin Density Approximation (LSDA) ---- */
 template <typedef scalar_t>
-DualVector<scalar_t> ExchangePot(const DualVector<scalar_t> & density){
+DualVector<scalar_t> LSDAExchangePot(const DualVector<scalar_t> & density){
     // Copying structure
     DualVector<scalar_t> exchange = density.EmptyLike();
 
@@ -107,29 +109,57 @@ DualVector<scalar_t> ExchangePot(const DualVector<scalar_t> & density){
     }
 }
 
-/* ---- Local Spin Density Approximation (LSDA) ---- */
+// Emperical functions from VWN
 template <typedef scalar_t>
 scalar_t X(scalar_t rs, scalar_t b, scalar_t c){
     return rs + b * pow(rs, 1./2.) + c;
 }
 
-void CorrelationEnergy(slate::Matrix<scalar_t> density, slate::Matrix<scalar_t> vc){
-    double x0 = -0.10498;
-    double b = 3.72744;
-    double c = 12.9352;
-    double Q = pow(4.*c-pow(b,2.),1./2.);
+template <typedef scalar_t>
+scalar_t f_z(scalar_t zeta){
+    return (pow(1.+zeta,4./3.) + pow(1.-zeta,4./3.) - 2)/(pow(2.,4./3.)-2.);
+}
 
-    for (int i = 0; i < density.m(); i++){
-        scalar_t val_i = vector_get(density, i);
-        if (val_i == 0){
-            vector_set(vc, i, 0.);
-        }
-        else{
-            vector_set(vc, i, val_i * (1.-log(2.))/pow(M_PI,2.) * (
-                    -log(val_i * X(1./val_i,b,c)) + 2.*b/Q * atan(Q/(2./pow(val_i,1./2.) + b)) - b*x0/X(pow(x0,2.),b,c) * (
-                            log(pow(pow(1./val_i,1./2.)-x0,2.)/X(1./val_i,b,c) + 2.*(2.*x0+b)/Q * atan(Q/(2./pow(val_i,1./2.) + b))  ))  ));
-        }
-    }
+template <typedef scalar_t>
+scalar_t alpha_c(scalar_t rs){
+    return -log(rs)/(6*pow(M_PI,2.))+0.03547;
+}
+
+// para- and ferro-magnetic correlation energies
+template <typedef scalar_t>
+scalar_t ec(scalar_t rs, scalar_t x0, scalar_t b, scalar_t c, scalar_t Q){
+    scalar_t x = pow(rs,1./2.);
+    scalar_t Xx = X(rs, b, c);
+    scalar_t Qtan = atan(Q / (2 * pow(rs,1./2.) + b));
+    return 3. / (4.*pow(M_PI*rs,3.)) * (1.-M_LN2) * (log(rs/Xx) + 2.*b/Q*Qtan - b*x0/X(pow(x0,2.)) * (log(pow(x-x0,2.)/Xx) + 2*(2*x0+b) / Q*qtan));
+}
+
+// Spin correlation energy
+template <typedef scalar_t>
+scalar_t ecs(scalar_t n_up, scalar_t n_down, const scalar_t & para[4], const scalar_t & ferro[4]){
+    scalar_t rs = pow(3./(4*M_PI*(n_up + n_down)),1./3.);               //Wigner-Seitz radius
+    scalar_t zeta = (n_up - n_down)/(n_up + n_down);                    //Polarization density
+    scalar_t ec_para = ec(rs, para[0], para[1], para[2], para[3]);      //Paramagnetic correlation energy
+    scalar_t ec_ferro = ec(rs, ferro[0], ferro[1], ferro[2], ferro[3]); //Ferromagnetic correlation energy
+    scalar_t f0 = 1.7099209341613656175639627762446829382052199078228271066178937217;
+    return ec_para + alpha_c(rs) * f_z(zeta) / f0  * (1. - pow(zeta,4.)) + (ec_ferro - ec_para) * f_z(zeta) * pow(zeta,4.);
+}
+
+template <typedef scalar_t>
+DualVector<scalar_t> LSDACorrelationPot(const DualVector<scalar_t> & density){
+    // Copying structure
+    DualVector<scalar_t> correlation = density.EmptyLike();
+
+    // Parameters {x0, b, c, Q}
+    // Paramagnetic parameters
+    scalar_t para[4] = {-0.10498, 3.72744, 12.9352, pow(4.*12.9352-pow(3.72744,2.),1./2.)};
+
+    // Ferromagnetic parameters
+    scalar_t ferro[4] = {-0.32500, 7.06042, 18.057, pow(4.*18.057-pow(7.06042,2.),1./2.)};
+
+    // Calculate potential as finite difference of spin correlation energy ecs()
+
+    return correlation;
 }
 
 void CorrelationPot(slate::Matrix<scalar_t> lattice, slate::Matrix<scalar_t> density, slate::Matrix<scalar_t> vc, slate::Matrix<scalar_t> buffer, slate::Matrix<scalar_t> x_mat, slate::Matrix<scalar_t> x_mat_deriv){
