@@ -95,8 +95,8 @@ DualVector<scalar_t> LSDAExchangePot(const DualVector<scalar_t> & density){
             auto tiledata_down = tile_down.data();
 
             // Access density tiles
-            auto tile_up_n = exchange.GetUp()(i, 0);
-            auto tile_down_n = exchange.GetDown()(i, 0);
+            auto tile_up_n = density.GetUp()(i, 0);
+            auto tile_down_n = density.GetDown()(i, 0);
             auto tiledata_up_n = tile_up.data();
             auto tiledata_down_n = tile_down.data();
 
@@ -145,6 +145,19 @@ scalar_t ecs(scalar_t n_up, scalar_t n_down, const scalar_t & para[4], const sca
     return ec_para + alpha_c(rs) * f_z(zeta) / f0  * (1. - pow(zeta,4.)) + (ec_ferro - ec_para) * f_z(zeta) * pow(zeta,4.);
 }
 
+// Finite difference of Spin correlation energy
+template <typedef scalar_t>
+scalar_t finite_diff_ecs_up(scalar_t n_up, scalar_t n_down, const scalar_t & para[4], const scalar_t & ferro[4]){
+    scalar_t eps = std::numeric_limits<scalar_t>::epsilon()*(1. + n_up);
+    return (ecs(n_up+eps, n_down, para, ferro) - ecs(n_up-eps, n_down, para, ferro)) / (2. * eps);
+}
+template <typedef scalar_t>
+scalar_t finite_diff_ecs_down(scalar_t n_up, scalar_t n_down, const scalar_t & para[4], const scalar_t & ferro[4]){
+    scalar_t eps = std::numeric_limits<scalar_t>::epsilon()*(1. + n_down);
+    return (ecs(n_up, n_down+eps, para, ferro) - ecs(n_up, n_down-eps, para, ferro)) / (2. * eps);
+}
+
+// Local Spin Density Approximation correlation potential
 template <typedef scalar_t>
 DualVector<scalar_t> LSDACorrelationPot(const DualVector<scalar_t> & density){
     // Copying structure
@@ -158,38 +171,49 @@ DualVector<scalar_t> LSDACorrelationPot(const DualVector<scalar_t> & density){
     scalar_t ferro[4] = {-0.32500, 7.06042, 18.057, pow(4.*18.057-pow(7.06042,2.),1./2.)};
 
     // Calculate potential as finite difference of spin correlation energy ecs()
+    // Loop over tiles
+    int64_t mt = correlation.GetUp().mt();
+    for (int64_t i = 0; i < mt; i++){
+        // Make sure tile is local
+        if (correlation.GetUp().tileIsLocal(i,0) &&
+            density.GetUp().tileIsLocal(i,0)){
+            // Access tiles
+            auto tile_up = correlation.GetUp()(i, 0);
+            auto tile_down = correlation.GetDown()(i, 0);
+            auto tiledata_up = tile_up.data();
+            auto tiledata_down = tile_down.data();
+
+            // Access density tiles
+            auto tile_up_n = density.GetUp()(i, 0);
+            auto tile_down_n = density.GetDown()(i, 0);
+            auto tiledata_up_n = tile_up.data();
+            auto tiledata_down_n = tile_down.data();
+
+            // Loop over tile
+            for (int64_t ii; ii < tile_up.mb(); ii++){
+                tiledata_up[ii] = finite_diff_ecs_up(tiledata_up_n[ii], tiledata_down_n[ii], para, ferro);
+                tiledata_down[ii] = finite_diff_ecs_down(tiledata_up_n[ii], tiledata_down_n[ii], para, ferro);
+            }
+        }
+    }
 
     return correlation;
 }
 
-void CorrelationPot(slate::Matrix<scalar_t> lattice, slate::Matrix<scalar_t> density, slate::Matrix<scalar_t> vc, slate::Matrix<scalar_t> buffer, slate::Matrix<scalar_t> x_mat, slate::Matrix<scalar_t> x_mat_deriv){
-    CorrelationEnergy(density, buffer);
-    interp_deriv(lattice, buffer, vc, x_mat, x_mat_deriv);
-}
-
-void LDAPot(slate::Matrix<scalar_t> lattice, slate::Matrix<scalar_t> density, slate::Matrix<scalar_t> vc, slate::Matrix<scalar_t> vx, slate::Matrix<scalar_t> vxc, slate::Matrix<scalar_t> buffer, slate::Matrix<scalar_t> x_mat, slate::Matrix<scalar_t> x_mat_deriv){
-    ExchangePot(density, vx);
-    CorrelationPot(lattice, density, vc, buffer, x_mat, x_mat_deriv);
-
-    slate::copy(vxc, vx);
-    slate::add(1.,vc,1.,vxc);
-}
-
-
 template <typedef scalar_t>
 DualVector<scalar_t> LSDA(const DualVector<scalar_t> & density, const Vector<scaler_t> & lattice){
     // Set the exchange potential
-    DualVector<scale_t> lsda = ExchangePot(density);
+    DualVector<scale_t> lsda = LSDAExchangePot(density);
 
     // Calculate the correlation term
+    lsda.Add(LSDACorrelationPot(density));
 
-    // Add the correlation term
-
+    return lsda;
 }
 
 /* ---- Exchange-Correlations dictionary ---- */
 template <typedef scalar_t>
-using func = void(*)(const slate::Matrix<scalar_t> &, const Vector<scaler_t> &);
+using func = DualVector<scalar_t>(*)(const DualVector<scalar_t> &, const Vector<scaler_t> &);
 
 template <typedef scalar_t>
 std::map<const char *, func<scalar_t>> functional_dictionary = {
